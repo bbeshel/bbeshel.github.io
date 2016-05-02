@@ -1,0 +1,151 @@
+/*
+ * CanvasHandler.js
+ * Author: Ben Beshel
+ * Handler for IIIF Canvases for T-PEN. 
+*/
+
+	var CanvasHandler = function () {
+		// var canvas;
+		// var $canvas;
+		var $container = $("<div id='canvasContainer' style='position: relative;'></div>");
+		
+		var $imgCanvas;
+		var imgCanvas;
+		var imgCx;
+		
+		var $dispCanvas;
+		var dispCanvas;
+		var dispCx;
+		
+		var $intCanvas;
+		var intCanvas;
+		var intCx;
+		
+		var anchorList = {
+			x: [],
+			y: [],
+			length: 0,
+			push: function (px, py) {
+				this.x.push(px);
+				this.y.push(py);
+				this.length++;
+			}
+		};
+		var mPos;
+		
+		var self = this;
+		
+		this.init = function () {
+			
+			//TODO: need to get image dynamically from json
+			//TODO: need an "onload" event, sometimes misses load
+			var img2 = new Image();
+			img2.src = "http://norman.hrc.utexas.edu/graphics/mswaste/160 h612e 617/160_h612e_617_001.jpg";
+			
+			
+			$imgCanvas = $("<canvas id='imgCanvas' style='position: absolute;'>");
+			imgCanvas = $imgCanvas.get(0);
+			imgCx = imgCanvas.getContext("2d");
+			//TODO: need to have dynamic parent to append to
+			$container.append($imgCanvas);
+			
+			$dispCanvas = $("<canvas id='dispCanvas' style='position: absolute;'>");
+			dispCanvas = $dispCanvas.get(0);
+			dispCx = dispCanvas.getContext("2d");
+			$container.append($dispCanvas);
+			
+			dispCx.lineWidth = 1;
+			dispCx.strokeStyle = "red";
+			
+			$intCanvas = $("<canvas id='intCanvas' style='position: absolute;'>");
+			intCanvas = $intCanvas.get(0);
+			intCx = intCanvas.getContext("2d");
+			$container.append($intCanvas);
+			
+			var img = $("<img src='http://norman.hrc.utexas.edu/graphics/mswaste/160 h612e 617/160_h612e_617_001.jpg' />");
+			img.on("load", function () {
+				imgCanvas.width = img.get(0).width;
+				imgCanvas.height = img.get(0).height;
+				imgCx.drawImage(img.get(0), 0, 0);
+				console.log(img.get(0));
+				console.log(img2);
+				dispCanvas.width = imgCanvas.width;
+				dispCanvas.height = imgCanvas.height;
+				intCanvas.width = imgCanvas.width;
+				intCanvas.height = imgCanvas.height;
+			});
+			
+			
+			
+			$("body").append($container);
+			
+			//TODO: need to get dims from json
+			
+		
+			
+			//TODO: should set this to other imgCanvas
+			console.log($imgCanvas);
+			$imgCanvas.bind("mousemove", function(e) {
+				// moveCallback(e, this);
+			});
+			
+			$dispCanvas.bind("mousemove", function(e) {
+				// console.log(this);
+				
+			});
+			
+			$intCanvas.bind("mousemove", function(e) {
+				// moveCallback(e, this);
+				moveCallback(e);
+				dispCx.clearRect(0, 0, dispCanvas.width, dispCanvas.height);
+				drawIndicator(e);
+			});
+			
+			$intCanvas.bind("click", function(e) {
+				addAnchor();
+				console.log(anchorList);
+			});
+			 
+			
+			
+				// imgCx.drawImage(img.get(0), 0, 0);
+		};
+		
+		this.getMousePos = function(evt) {
+			var rect = imgCanvas.getBoundingClientRect();
+			return {
+				x: Math.floor((evt.clientX - rect.left)/(rect.right-rect.left)*imgCanvas.width),
+				y: Math.floor((evt.clientY - rect.top)/(rect.bottom-rect.top)*imgCanvas.height)
+			};
+		};	
+		
+		var moveCallback = function (e) {
+			// console.log(e);
+			mPos = self.getMousePos(e);
+			// console.log(canvas);
+			// console.log(canvas.mPos);
+		};
+		
+		var drawIndicator = function (e) {
+			dispCx.beginPath();
+			dispCx.strokeStyle="red";
+			dispCx.arc(mPos.x, mPos.y, 5, 0, 360);
+			dispCx.stroke();
+			
+			if (anchorList.length > 0) {
+				dispCx.beginPath();
+				dispCx.moveTo(
+					anchorList.x[anchorList.length-1], 
+					anchorList.y[anchorList.length-1]
+				);
+				dispCx.lineTo(mPos.x, mPos.y);
+				dispCx.stroke();
+			}
+		};
+		
+		var addAnchor = function () {
+			anchorList.push(mPos.x, mPos.y);
+		};
+		
+		
+	};

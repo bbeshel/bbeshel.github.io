@@ -1,0 +1,29 @@
+.canvas {
+	display: inline;
+	float:left;
+	border: 5px solid ;
+	}
+	
+	
+.toolpanel {
+	display: inline;
+	float:left;
+	width: 300px;
+	background: #DADADA;
+	}
+	
+.tool {
+	float: left;
+	}
+	
+.type {
+	float: right;
+	}
+	
+.clear {
+	clear: both;
+	}
+	
+body {
+	background: #E3E3E3;
+	}

@@ -1,0 +1,797 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Benjamin E. Beshel</title>
+		<link href='http://fonts.googleapis.com/css?family=Oxygen:400,700' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="styles.css" type="text/css">
+		<link rel="stylesheet" href="railscasts.css">
+	</head>
+	
+	<body>
+		<div>
+			<div id="name">Benjamin E. Beshel</div>
+			
+			<!--navbar-->
+			<div>
+				<div id="navbar">
+				<a class="head-link" href="index.html">HOME</a>
+				<a class="head-link" href="code.html">CODE</a>
+				<a class="head-link" href="projects.html">PROJECTS</a>
+				</div>
+			</div>
+			
+			<div class="container">
+				<div class="mini-header-div" id="page-header">
+					<a class="miniheader">Code Examples</a>
+				</div>
+				<div id="overview-parent">
+					<div id="directory">
+							<ul>
+						
+							</ul>
+						</div>
+					<div id="overview">
+						<p>
+						<!--directory-->
+						
+						Here you will find examples of languages I've worked with 
+						in the past, small finished projects, code snippets, and download 
+						links. Please check the <a href="projects.html">Projects</a> page for 
+						more information on what I've been invested in currently. Major thanks 
+						to <a href="https://highlightjs.org/">highlightjs</a> for the fantastic 
+						code highlighter!
+						</p>
+					</div>
+				</div>
+			</div>
+			
+			
+			
+			<!--C++-->
+			<div class="lang-content">
+				<p>
+				The below examples were coded in C++ during my Data Structures course. 
+				This first example simulates a printer that creates pages in a booklet. 
+				<br />
+				<br />
+				From the original lab description:
+				<br />
+				<br />
+				"When printing out a document, normally the first page is printed first, 
+				then the second, then the third, and so on until the end. However, 
+				when creating a fold-over booklet, the order of printing must be altered. 
+				A fold-over booklet has four pages per sheet, with two on the front and 
+				two on the back. When you stack all the sheets in order, then fold the 
+				booklet in half, the pages appear in the correct order as in a regular 
+				book. For example, a 4-page booklet would print on 1 sheet of paper: 
+				the front will contain page 4 then page 1, and the back will contain 
+				page 2 then page 3. Here we have output for the code below, 
+				using various inputs."
+				<br />
+					<p class="small-code">
+					Printing order for 1 pages:<br />
+					Sheet 1, front: Blank, 1<br />
+					Printing order for 14 pages:<br />
+					Sheet 1, front: Blank, 1<br />
+					Sheet 1, back : 2, Blank<br />
+					Sheet 2, front: 14, 3<br />
+					Sheet 2, back : 4, 13<br />
+					Sheet 3, front: 12, 5<br />
+					Sheet 3, back : 6, 11<br />
+					Sheet 4, front: 10, 7<br />
+					Sheet 4, back : 8, 9<br />
+					Printing order for 4 pages:<br />
+					Sheet 1, front: 4, 1<br />
+					Sheet 1, back : 2, 3<br />
+					</p>
+				</p>
+				<pre><code>
+
+using namespace std;
+
+void print(int beg, int end, int sheet){
+	int blanks = 0;
+	int casecheck = 0;
+	int altEnd = ceil((static_cast&lt;double>(end))/4.0);
+
+	cout &lt;&lt; "Printing order for " &lt;&lt; end &lt;&lt; " pages:" &lt;&lt; endl;
+
+	if(end%4>0)
+	blanks = 4 - (end%4);
+
+	if(end>=3){
+		while(sheet &lt;= altEnd){
+		casecheck = 0;
+		  if(blanks > 0){
+				if(blanks == 2){
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", front: Blank, " &lt;&lt; beg &lt;&lt; endl;
+					beg++;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", back : " &lt;&lt; beg &lt;&lt; ", Blank" &lt;&lt; endl;
+					beg++;
+				}
+				else if(blanks == 3){
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", front: Blank, " &lt;&lt; beg &lt;&lt; endl;
+					beg++;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", back : " &lt;&lt; beg &lt;&lt; ", Blank" &lt;&lt; endl;
+					beg++;
+					sheet++;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", front: Blank, " &lt;&lt; beg &lt;&lt; endl;
+					beg++;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", back : " &lt;&lt; beg &lt;&lt; ", " &lt;&lt; end &lt;&lt; endl;
+					beg++;
+					end--;
+				}
+				else{
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", front: Blank, " &lt;&lt; beg &lt;&lt; endl;
+					beg++;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", back : " &lt;&lt; beg &lt;&lt; ", " &lt;&lt; end &lt;&lt; endl;
+					beg++;
+					end--;
+				}
+					sheet++;
+					blanks = 0;   
+					casecheck = 1;
+				}
+
+				if(casecheck == 0){
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", front: " &lt;&lt; end &lt;&lt; ", " &lt;&lt; beg &lt;&lt; endl;
+					beg++; 
+					end--;
+					cout &lt;&lt; "Sheet " &lt;&lt; sheet &lt;&lt; ", back : " &lt;&lt; beg &lt;&lt; ", " &lt;&lt; end &lt;&lt; endl;
+					beg++;
+					end--;
+					sheet++;
+				}
+			
+			}
+		}	
+	else{
+	  if(end==2){
+		cout &lt;&lt; "Sheet 1, front: Blank, " &lt;&lt; beg &lt;&lt; endl;
+		cout &lt;&lt; "Sheet 1, back : " &lt;&lt; end &lt;&lt; ", Blank" &lt;&lt; endl; 
+	  }else{
+		cout &lt;&lt; "Sheet 1, front: Blank, 1" &lt;&lt; endl;
+	  }
+	}
+}
+
+int main(){
+	int num;
+	cin >> num;
+	while(num!=0){
+	  print(1, num, 1);
+	  cin >> num;
+	}
+
+}
+				</code></pre>
+					<p>
+					This next piece prints out a series of pushes and pops 
+					from a stack, but in a unique way. 
+					<br />
+					<br />
+					From the original lab description:
+					<br />
+					<br />
+					
+					"We start with an initial string of characters. 
+					The characters are given with an initial order, and there 
+					is an intermediate stack that is initially empty. At each 
+					step, you may either take the next character from the initial 
+					order (if any) and push it onto the stack, or you may pop an 
+					item from the stack (if any), and place it as the next character in the output string.
+					As an example, if you start with the sequence abc 
+					you can achieve the result bac by pushing a, pushing b, popping 
+					b, popping a, pushing c, and finally popping c. We can describe 
+					this sequence of maneuvers as ++--+- where each + designates a 
+					push and each - designates a pop.
+					<br />
+					<br />
+					More generally, some inputs may not have any valid conversions 
+					while others may have more than one valid sequence. For example, 
+					it is impossible to go from abc to cab, intuitively because the 
+					only way to get c as the first output character would be to do 
+					three pushes followed by a pop; yet at that time, b is above a 
+					on the stack and must be retrieved next. Yet there are two ways 
+					to go from aab to aba, either as ++-+-- or +-++--."
+					<br />
+					<br />
+					The code below, given the following inputs, will print out:
+						<p class="small-code">
+						Output for abc bac<br />
+						[<br />
+						++--+-<br />
+						]<br />
+						Output for abc cab<br />
+						[<br />
+						]<br />
+						Output for aab aba<br />
+						[<br />
+						++-+--<br />
+						+-++--<br />
+						]<br />
+						Output for eeep epee<br />
+						[<br />
+						+++-+---<br />
+						++-++---<br />
+						+-+++---<br />
+						]<br />
+						</p>
+					</p>
+				<pre><code>
+
+using namespace std;
+
+void solve(const string& goal,      
+           const string& I,         
+           const string& S,         
+           const string& O,         
+           const string& moves      
+     ) 
+{
+  
+	if(I.length() == 1){
+		solve(goal, "", S+I[0], O, moves+"+");
+	}
+	else if(I.length() > 1){
+		solve(goal, I.substr(1,I.length()-1), S+I[0], O, moves+"+");
+	}
+
+	if(I.length() > 0){
+		 if(S[S.length()-1] == goal[O.length()]){
+		 solve(goal, I, S.substr(0,S.length()-1), O+S[S.length()-1], moves+"-");
+		 }
+	}
+
+	if(I.empty() && goal == O){
+		cout << moves << endl;
+		return;
+	}
+	else if(I.empty() && !S.empty()){
+	 
+		if(S.length() > 1){
+			solve(goal, "", S.substr(0,S.length()-1), O+S[S.length()-1], moves+"-");
+		}
+		else{
+			solve(goal, "", "", O+S[0], moves+"-");
+		}
+	}
+	else if(I.empty() && goal != O && S.empty()){
+	 return; 
+	}
+}
+
+int main(){
+
+	string str, str2;
+	int amt;
+	vector<string> fin;
+
+	cin >> amt;
+
+	fin.resize(amt*2);
+	for(int i = 0; i < amt*2; i++){
+	  cin >> fin[i];
+	}
+	
+	for(int j = 0; j < amt*2; j++){
+		string str3 = "Output for " + fin[j] + " " + fin[j+1] + "\n" + "[" + "\n";
+		cout << str3;
+		solve(fin[j+1], fin[j], "", "", "");
+		cout << "]" << endl;
+		j++;
+	}
+}
+				</code></pre>
+			</div>
+			
+			<!--Assembly-->
+			<div class="lang-content">
+			<p>
+			This section contains a program during my time in Computer Architecture. 
+			I edited Intel Assembly x86 code to produce alternate results for class 
+			credit.
+			<br />
+			<br />
+			**Note that some of the code below was originally written by 
+			<a href="http://cs.slu.edu/~fritts/">Jason Fritts</a>.**
+			<br />
+			<br />
+			The code below originally computed a simple arithmetic sequence and 
+			printed out each value in the series. However, we were tasked with 
+			editing the code to print out values of the Fibonacci Sequence, and see 
+			how it handled numbers that exceeded the max unsigned int size (hint: 
+			it printed out the max and min unsigned int sizes, thanks to rolling over, 
+			in an infinite alternating sequence once reaching the max int size).
+			</p>
+				<pre><code>
+.equiv MIN_ELEMENTS, 1
+.equiv MAX_ELEMENTS, 1000000
+.equiv BOUND_WORD, 65536
+
+.text
+.global main				/* program entry point */
+
+main:
+    pushl %ebp				/* Create stack frame */
+    movl  %esp, %ebp 			/* ebp marks our place in the stack */
+
+    pushl %ebx				/* Save ebx, edi, & esi */
+    pushl %edi
+    pushl %esi
+
+    /* start program code */
+
+    pushl $MAX_ELEMENTS		/* query user for # of elements to print */
+    pushl $MIN_ELEMENTS
+    call  get_number
+    addl  $8, %esp
+    movl  %eax, n
+
+    /* Determine n elements in set */
+    leal  num_set, %ebx
+    movl  $0, %esi			/* i = 0 */
+    
+    cmpl  n, %esi
+    jae   exit_i_loop
+    movl  %esi, (%ebx, %esi, 4)
+    movl  %esi, %eax
+    addl  $1, %esi
+    cmpl  n, %esi
+    jae   exit_i_loop
+    movl  %esi, (%ebx, %esi, 4)
+    movl  %esi, %ecx
+    addl  $1, %esi	    
+
+    i_loop:
+	cmpl  n, %esi			/* is i < n? */
+	jae   exit_i_loop
+
+	movl  %eax, %edx
+	imull  $2, %edx
+	addl  %ecx, %edx
+	movl  %edx, (%ebx, %esi, 4)
+
+	movl  %ecx, %eax
+	movl  %edx, %ecx
+
+	addl $1, %esi
+	jmp   i_loop
+
+    exit_i_loop:
+
+    /* Print out n elements of number pattern */
+
+    pushl n				/* print "Display X element..." */
+    pushl $out_str
+    call printf
+    addl  $8, %esp
+
+    leal  num_set, %ebx
+    movl  $0, %esi			/* i = 0 */
+
+    print_loop:
+	cmpl  n, %esi			/* is i < ____? */
+	jae   exit_print_loop
+	
+	/* print out value of i-th element */
+	pushl (%ebx, %esi, 4)
+	pushl $elem_str
+	call  printf
+	addl  $8, %esp
+
+	addl  $1, %esi			/* i = i + 1 */
+	jmp  print_loop
+
+    exit_print_loop:
+
+    pushl $end_line			/* print end of line */
+    call  printf
+    addl  $4, %esp
+
+    /* end program code */
+
+    popl  %esi				/* Restore ebx, edi, & esi */
+    popl  %edi
+    popl  %ebx
+    movl  %ebp, %esp			/* Destroy stack frame */
+    popl  %ebp
+    ret					/* Return control to Linux */
+
+
+.section .rodata			/* read-only (e.g. string) data */
+
+    out_str:
+	.string "\nDisplaying %d elements of pattern:\n    "
+    elem_str:
+	.string "%d "
+    end_line:
+	.string "\n"
+
+.section .bss				/* uninitialized data */
+
+	.comm n, 4
+	.comm num_set, 4*MAX_ELEMENTS
+				</code></pre>
+			</div>
+			
+			<!--LEX-->
+			<div class="lang-content">
+				<p>
+				The LEX language is a tool used to parse through text and match 
+				strings using regular expressions, which it uses as its rules, to 
+				modify the strings it matches and change text files. I learned this in 
+				my Programming Languages course to apply the concept of regular expressions.
+				<br />
+				<br />
+				The code below will take in common "internet slang" and abbreviations and will 
+				change them to their full string counterparts. For instance, the first rule "S" 
+				will change "sry" to "sorry", rule "P" will change "plz" or "pls" to 
+				"please", and will even detect whether or not the string matched was 
+				originally at the beginning of a sentence and capitalize the output.
+				</p>
+				<pre><code>
+/*Created by Ben Beshel, 2/5/14*/
+S	"sry"
+G	"gtg"
+G2	"g2g"
+R	"brb"
+Y	"ily"
+H	"smh"
+P	"plz"|"pls"
+B	"b4"
+L	"lol"
+F	"rofl"
+A	"cya"
+T	"btw"
+O	"omg"
+C	"iirc"
+BS	"bbs"
+X	"thx"
+K	"afaik"
+M	"atm"
+I	"ik"
+U	"ur"
+FT	"ftfy"
+
+%start CAP NON
+
+%%  
+  BEGIN CAP;
+[\n]|\.			{BEGIN CAP; ECHO;}
+\\[^ \n]+		ECHO;
+
+
+< NON>{S}		{BEGIN NON; printf("sorry"); }
+< CAP>{S}		{BEGIN NON; printf("Sorry"); }
+< NON>{G}|{G2}	{BEGIN NON; printf("got to go"); }
+< CAP>{G}|{G2}	{BEGIN NON; printf("Got to go"); }
+< NON>{R}		{BEGIN NON; printf("be right back"); }
+< CAP>{R}		{BEGIN NON; printf("Be right back"); }
+{Y}				{BEGIN NON; printf("I love you"); }//I is always capital
+< NON>{H}		{BEGIN NON; printf("shaking my head"); }
+< CAP>{H}		{BEGIN NON; printf("Shaking my head"); }
+< NON>{P}		{BEGIN NON; printf("please"); }
+< CAP>{P}		{BEGIN NON; printf("Please"); }
+< NON>{B}		{BEGIN NON; printf("before"); }
+< CAP>{B}		{BEGIN NON; printf("Before"); }
+< NON>{L}		{BEGIN NON; printf("haha"); }
+< CAP>{L}		{BEGIN NON; printf("Haha"); }
+< NON>{F}		{BEGIN NON; printf("hahaha"); }
+< CAP>{F}		{BEGIN NON; printf("Hahaha"); }
+< NON>{A}		{BEGIN NON; printf("see you"); }
+< CAP>{A}		{BEGIN NON; printf("See you"); }
+< NON>{T}		{BEGIN NON; printf("by the way"); }
+< CAP>{T}		{BEGIN NON; printf("By the way"); }
+< NON>{O}		{BEGIN NON; printf("oh my God"); }
+< CAP>{O}		{BEGIN NON; printf("Oh my God"); }
+< NON>{C}		{BEGIN NON; printf("if I remember correctly"); }
+< CAP>{C}		{BEGIN NON; printf("If I remember correctly"); }
+< NON>{BS}		{BEGIN NON; printf("be back soon"); }
+< CAP>{BS}		{BEGIN NON; printf("Be back soon"); }
+< NON>{X}		{BEGIN NON; printf("thanks"); }
+< CAP>{X}		{BEGIN NON; printf("Thanks"); }
+< NON>{K}		{BEGIN NON; printf("as far as I know"); }
+< CAP>{K}		{BEGIN NON; printf("As far as I know"); }
+< NON>{M}		{BEGIN NON; printf("at the moment"); }
+< CAP>{M}		{BEGIN NON; printf("At the moment"); }
+{I}				{BEGIN NON; printf("I know"); }//I always capital
+< NON>{U}		{BEGIN NON; printf("you are"); }
+< CAP>{U}		{BEGIN NON; printf("You are"); }
+< NON>{FT}		{BEGIN NON; printf("fixed that for you"); }
+< CAP>{FT}		{BEGIN NON; printf("Fixed that for you"); }
+
+
+.			{BEGIN NON; ECHO; }
+
+				</code></pre>
+			</div>
+			
+			<!--Haskell-->
+			<div class="lang-content">
+				<p>
+				This next bit of code introduces the wonderful world of Haskell.
+				Haskell is a functional programming language, which was quite a 
+				different experience from the normal OOP languages I'm used to. 
+				Many people who have used the language swear by it due to the fact 
+				that it is able to do so much in so few lines. 
+				<br />
+				<br />
+				The below code is actually the constructors for nodes and trees. 
+				With these declarations, we could simply write:
+					<p class="small-code">
+					treeInsert (singleton 0) (singleton 1)
+					</p>
+				to get a tree with
+				0 and 1 (where 0 is the root). The rest of the functions are 
+				self-explanatory by name. You could use this code to create very 
+				large trees - the best part is that this code could equate to hundreds 
+				of lines more of code in many other (more common) languages!
+				</p>
+				<pre><code>
+data Tree a = EmptyTree 
+     | Node a (Tree a) (Tree a) 
+				deriving (Show,Read,Eq) 
+
+singleton :: a -> Tree a  
+singleton x = Node x EmptyTree EmptyTree
+
+treeInsert :: (Ord a) => a -> Tree a -> Tree a  
+treeInsert x EmptyTree = singleton x  
+treeInsert x (Node a left right)   
+    | x == a = Node x left right  
+    | x < a  = Node a (treeInsert x left) right  
+    | x > a  = Node a left (treeInsert x right)
+
+findInTree :: (Ord a) => a -> Tree a -> Bool  
+findInTree x EmptyTree = False  
+findInTree x (Node a left right)  
+    | x == a = True  
+    | x < a  = findInTree x left  
+    | x > a  = findInTree x right 
+
+instance Functor Tree where  
+    fmap f EmptyTree = EmptyTree  
+    fmap f (Node x leftsub rightsub) = 
+	     Node (f x) (fmap f leftsub) 
+	                 (fmap f rightsub)
+	              
+removeFromTree :: (Ord a) => a -> Tree a -> Tree a
+removeFromTree x EmptyTree = EmptyTree
+removeFromTree x (Node a left right)
+  | x == a && left == EmptyTree && right == EmptyTree = EmptyTree
+  | x == a && left /= EmptyTree && right == EmptyTree = left
+  | x == a && left == EmptyTree && right /= EmptyTree = right
+  | x == a && left /= EmptyTree && right /= EmptyTree = Node (findMin right) left (removeFromTree (findMin right) right)
+  | x < a  = Node a (removeFromTree x left) right
+  | x > a  = Node a left (removeFromTree x right)  
+  
+findMin :: (Ord a) => Tree a -> a
+findMin EmptyTree = error "Empty Tree"
+findMin (Node a EmptyTree EmptyTree) = a
+findMin (Node a left right)
+  | a < getVal(left) && a < getVal(right) = a
+  | a < getVal(left) && a > getVal(right) = findMin right
+  | a > getVal(left) && a < getVal(right) = findMin left
+  | getVal(left) < getVal(right) = findMin left
+  | getVal(left) > getVal(right) = findMin right
+  where getVal (Node a l r) = a 
+				</code></pre>
+				
+				<p>
+				Here, we have two functions at the top of our code: 
+				"rle" and "rleInverse". The first will take in a string and return 
+				its run length encoding. The second will reverse it - for instance:
+					<p class="small-code">
+					rle "Hello"
+					</p>
+					<p>
+					will return a string:
+					</p>
+					<p class="small-code">
+					"H1 e1 l2 o1".
+					</p>
+					<p>
+					Intuitively, running "rleInverse (rle "Hello")" would print "Hello". 
+					The last of the functions allow you to create a  "Point" and "Polygon" 
+					data type, which are used in the following functions to create shapes, 
+					calculate distance between points, check if a point is on a line segment, 
+					and calculate perimeter.
+					</p>
+				</p>
+				<pre><code>
+import Data.Char
+
+rle :: String -> String
+rle "" = ""
+rle (x:xs)
+  |null xs	='1' :  x : []
+  |not (null xs) && x == head xs = chr (incSpec (x:xs)) : x : if null (drop (incSpec (x:xs)-48) (x:xs)) then [] else ' ' : rle (drop (incSpec (x:xs)-48) (x:xs)) 
+  |otherwise	= '1' : x : ' ' : rle xs
+  where incSpec (n:ns) = if not (null ns) && n == head ns then 1 + incSpec ns else 49
+	
+rleInverse :: String -> String
+rleInverse "" = ""
+rleInverse (x:xs)
+  |null xs	= []
+  |not (null xs) && ((ord x)-48)/=0	= head xs : rleInverse ((decSpec x):xs)
+  |otherwise	= rleInverse (drop 3 (x:xs))
+    where decSpec n = chr ((ord n)-1) 
+	  
+type Point = (Double, Double)
+type Polygon = [Point]
+
+dist :: Point -> Point -> Double
+dist (x,y) (n,p) = sqrt(((n-x)**2)+((p-y)**2))
+
+onLineSegment :: Point -> Point -> Point -> Bool
+onLineSegment (a,b) (x,y) (n,p)
+  | (dist (x,y) (a,b)) + (dist (a,b) (n,p)) == (dist (x,y) (n,p)) = True
+  | otherwise = False
+  
+isValid :: Polygon -> Bool
+isValid xs = if length xs < 3 then False else True
+
+perimeter :: Polygon -> Double
+perimeter xs
+  | not (isValid xs)	= error "Not a valid polygon."
+  | otherwise = (dist (head xs) (head (drop ((length xs)-1) xs))) + addUp xs
+  where addUp (x:xs) = if null xs then 0 else (dist x (head xs)) + addUp xs 
+
+onPolygonBorder :: Point -> Polygon -> Bool
+onPolygonBorder (a,b) xs
+  | not (isValid xs)	= error "Not a valid polygon."
+  | any (1==) (testAllSides (a,b) xs)	= True
+  | otherwise = False
+				</code></pre>
+			</div>
+			
+			<!--Java-->
+			<div class="lang-content">
+				<p>
+				Last but not least, we have Java. It was the first programming 
+				language I've used, and I still enjoy using it. If you would like to 
+				see more extensive projects I've made in this language, please 
+				visit the <a href="projects.html">Projects</a> page.
+				<br />
+				<br />
+				Below is a simple class to convert a decimal number to a new base. 
+				It will allow you to even convert up to a base of 16, for hex.
+				</p>
+				<pre><code>
+import java.util.Scanner;
+public class ConverterTester {
+
+		public static void main(String[] args){
+			int n;
+			int b;
+			
+			Scanner scan = new Scanner(System.in);
+			System.out.println("What number would you like to convert?");
+			n = scan.nextInt();
+			System.out.println("To which base?");
+			b = scan.nextInt();
+			
+			testVal(b, n);
+			
+		}
+		
+		public static void testVal(int base, int num){
+			
+			
+			DecimalConverter c = new DecimalConverter(base);
+			String result = c.convert(num);
+			System.out.println(num + " converted to base " + base + " is " + result);
+		}
+}
+
+
+public class DecimalConverter {
+	
+	private int base = 10;
+	
+	public DecimalConverter(int b){
+	base = b;	
+	
+	}
+	
+	public String convert(int dec){
+		int quotient = 1;
+		int remainder;
+		
+		String baseNum = "";
+		
+		while(quotient != 0){
+			quotient = dec / base;
+			remainder = dec % base;
+			baseNum = changeRep(remainder) + baseNum;
+			dec = quotient;
+			System.out.println(dec + " " + baseNum);
+			
+		}
+		return baseNum;
+	}
+	
+	private char changeRep(int num){
+		if (num < 10)
+			return(char)('0' + num);
+		else if(num < 10 + 26)
+			return(char)('A' + (num - 10));
+		else{
+			System.out.println("Error");
+			return 0;
+		}
+	}
+}
+
+
+				</code></pre>
+				
+				<p>
+				This next piece of code is simple: it includes a Factorial 
+				class that calculates the factorial of a given number. The 
+				tester class was to help determine how Java handles ints and 
+				doubles, as well as how far up the factorial chain Java will 
+				handle them until it fails to represent the answer correctly.
+				</p>
+				
+				<pre><code>
+public class Factorial {
+	
+	
+	public Factorial(){
+		
+	}
+	
+	public int facCalc(int fac){
+		int temp;
+		
+		
+		temp = fac-1;
+		while(temp > 0){
+			fac=fac*temp;
+			temp--;
+		
+		}
+		return fac;
+	}
+}
+
+
+public class FactorialTester {
+
+	public static void main(String[] args){
+		Factorial f = new Factorial();
+		System.out.println("5! = " + f.facCalc(5));
+		System.out.println("8! = " + f.facCalc(8));
+		
+		DoubleFactorial df = new DoubleFactorial();
+		System.out.println("INTEGER FACTORIALS");
+		for(int k=0; k < 14; k++){
+			System.out.println(k + "! " + f.facCalc(k));
+		}
+		
+		
+		System.out.println("DOUBLE FACTORIALS");
+		for(double k=0; k < 172; k++){
+			System.out.println(k + "! " + df.facCalc(k));
+		}
+
+		System.out.println("INT fails at 13!");
+		System.out.println("DOUBLE fails at 171! (Prints inifinty)");
+		
+		
+	}
+}
+
+				</code></pre>
+			</div>
+
+			<script src="jquery-2.1.3.min.js" type="text/javascript"></script>
+			<script src="pageGen.js" type="text/javascript"></script>
+			<script src="highlight.pack.js"></script>
+			<script>hljs.initHighlightingOnLoad();</script>
+	</body>
+	
+	
+</html>
