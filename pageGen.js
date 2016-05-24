@@ -4,7 +4,7 @@ This simply generates these elements and appends the individual
 text sections to them.	
 */
 $(document).ready(function(){
-	var heads = ["C/C++", "Assembly x86", "LEX/FLEX", 
+	var heads = ["JavaScript, HTML5/CSS", "C/C++", "Assembly x86", "LEX/FLEX", 
 		"Haskell", "Java"];
 	var ids = ["cplus","x86","lex","hask","java"];
 	var div = $("<div>");
