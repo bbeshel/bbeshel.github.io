@@ -25,28 +25,37 @@ var localZaxis = new THREE.Vector3(0, 0, 1);
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 
+var raycastHeight;
+
+var stats = new Stats();
+document.body.appendChild( stats.domElement );  
+
 var element = document.body;
 
-
 var fullscreenchange = function ( event ) {
-    if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
-        document.removeEventListener( 'fullscreenchange', fullscreenchange );
-        document.removeEventListener( 'mozfullscreenchange', fullscreenchange );    
-    }
+  if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+    document.removeEventListener( 'fullscreenchange', fullscreenchange );
+    document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+    element.requestPointerLock();
+  }
 };
-
 document.addEventListener( 'fullscreenchange', fullscreenchange, false );
 document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
 element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+
 element.requestFullscreen();
+
 
 
 function init() {
 
+
+
+    
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
+    // scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
     // Add player object
     //added sample texture to try to work on simulating the ball actually rolling
@@ -61,7 +70,8 @@ function init() {
 	//This is the object that follows the ball and keeps its z/y rotation
 	//It casts rays outwards to detect objects for the player
 	raycastReference = new THREE.Object3D();
-	raycastReference.position.y = 2;
+	raycastHeight = 1;
+	raycastReference.position.y = raycastHeight;
 	scene.add(raycastReference);
 	
 	//Attach the camera to lock behind the ball
@@ -167,17 +177,12 @@ function init() {
         vertex.z += Math.random() * 20 - 10;
 
     }
+    
+    var ground = new THREE.Color();
+    ground.setRGB(0,0,0);
+    ground.getHexString();
 
-    for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
-
-        var face = geometry.faces[ i ];
-        face.vertexColors[ 0 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        face.vertexColors[ 1 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        face.vertexColors[ 2 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-    }
-
-    material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
+    material = new THREE.MeshBasicMaterial( { color: ground } );
 
     mesh = new THREE.Mesh( geometry, material );
     scene.add( mesh );
@@ -186,35 +191,28 @@ function init() {
 	//*************************************************************************
 	
     geometry = new THREE.BoxGeometry( 20, 20, 20 );
-
-    for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
-
-        var face = geometry.faces[ i ];
-        face.vertexColors[ 0 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        face.vertexColors[ 1 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        face.vertexColors[ 2 ] = new THREE.Color().setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-    }
+    var color = new THREE.Color();
 
     for ( var i = 0; i < 1000; i ++ ) {
-
-        material = new THREE.MeshPhongMaterial( { specular: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
+	color.setRGB(Math.random(), Math.random(), Math.random());
+	color.getHexString();
+        material = new THREE.MeshPhongMaterial( { specular: 0xffffff, shading: THREE.FlatShading, color: color } );
 
         var mesh = new THREE.Mesh( geometry, material );
-        mesh.position.x = Math.floor( Math.random() * 50 - 10 ) * 20;
+        mesh.position.x = Math.floor( Math.random() * 5)*20*Math.random()*Math.random()*100%1000;
         mesh.position.y = 10;
-        mesh.position.z = Math.floor( Math.random() * 50 - 10 ) * 20;
+        mesh.position.z = Math.floor( Math.random() * 5)*20*Math.random()*Math.random()*100%1000;
+        mesh.scale.set(Math.random()*5%1+1, Math.random()*5%1+1, Math.random()*5%1+1);
         scene.add( mesh );
-
-        material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 
         objects.push( mesh );
 
     }
 
     
-	//Setup the renderer and attach it to the page
+     //Setup the renderer and attach it to the page
     renderer = new THREE.WebGLRenderer();
+    renderer.antialias = true;
     renderer.setClearColor( 0xffffff );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -225,6 +223,8 @@ function init() {
     window.addEventListener( 'resize', onWindowResize, false );
 
 }
+
+var log;
 
 //Thanks to: http://webmaestro.fr/collisions-detection-three-js-raycasting/
 function setupCollisions(item) {
@@ -259,6 +259,11 @@ function setupCollisions(item) {
 			collisions = this.caster.intersectObjects(objects);
 			
 			if (collisions.length > 0 && collisions[0].distance <= distance) {
+			  
+				//removes all objects after a certain amount
+				if (objects.length < 500) {
+				  addMoreObjs();
+				}
 				
 				//updates matrix of ball
 				exterior.updateMatrix();
@@ -288,7 +293,7 @@ function setupCollisions(item) {
 				collisions[0].object.quaternion.setFromRotationMatrix(obRot);
 
 				//Adds object to the ball
-                exterior.add(collisions[0].object);
+				exterior.add(collisions[0].object);
 				//Sets object position to where the object was relative to ball
 				collisions[0].object.position.copy(obV);
 				//increment amount of objs added
@@ -296,11 +301,12 @@ function setupCollisions(item) {
 				
 				//Limits max objects on ball to maxObjectsOnBall
 				if (objsAdded > maxObjectsOnBall) {
-					exterior.remove(exterior.children[1]);
+				exterior.remove(exterior.children[1]);
 				}
 				//Asymptotic attempt of increase of collision detect distance
-				var log = (Math.log(objsAdded+1)*4);
-				distance += 1/log;
+				log = (Math.log(objsAdded+1)*4);
+				distance += .25/log;
+				player.translateY(.5/log);
 				
 				//changes the cam zoom
 				curCamZoom += 0.12;
@@ -313,7 +319,6 @@ function setupCollisions(item) {
 				//pushes back ball as objects added
 				player.position.z += 0.01*log;
 				
-				console.log(camera.position.y);
 			}
 		}
 	};
@@ -321,6 +326,29 @@ function setupCollisions(item) {
 	
 	
 };
+var count = 1;
+
+function addMoreObjs() {
+  for (var i = 0; i < 300; i++) {
+    geometry = new THREE.BoxGeometry( 20, 20, 20 );
+    var color = new THREE.Color();
+
+    color.setRGB(Math.random(), Math.random(), Math.random());
+    color.getHexString();
+    material = new THREE.MeshPhongMaterial( { specular: 0xffffff, shading: THREE.FlatShading, color: color } );
+
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.position.x = Math.floor( Math.random() * 50 - 10 ) * 20;
+    mesh.position.y = 10;
+    mesh.position.z = Math.floor( Math.random() * 50 - 10 ) * 20;
+    mesh.scale.set(Math.random()*5%1+count+(1/log), Math.random()*5%1+count+(1/log), Math.random()*5%1+count+(1/log));
+    scene.add( mesh );
+
+    objects.push( mesh );
+
+  }
+  count++
+}
 
 //Removes the desired object from the list of objects in scene not on ball
 function removeFromObjects(obj) {
@@ -343,10 +371,19 @@ function onWindowResize() {
 }
 
 function animate() {
+  
+	if(player.position.z > 1000 || player.position.z < -1000 || player.position.x > 1000 || player.position.x < -1000){
+	  player.position.x = 0;
+	  player.position.z = 0;
+	}
+  
+  
+  
 	//Was having issues returning exterior as undefined, this is a bad fix.
 	exterior = player.children[0];
-
-    requestAnimationFrame( animate );
+	
+	stats.update();
+	requestAnimationFrame( animate );
 	
 	//Detect collisions
 	raycastReference.collision();
@@ -402,7 +439,7 @@ function animate() {
 	player.translateZ(player.velocity.z * delta);
 	
 	//Updates the raycast reference so that it follows the position of the player
-	raycastReference.position.set(player.position.x, 0, player.position.z);
+	raycastReference.position.set(player.position.x, raycastHeight, player.position.z);
 	
 	prevTime = time;
 
@@ -438,3 +475,8 @@ function rotateAroundWorldAxis(object, axis, radians) {
 
 init();
 animate();
+
+   var con = document.getElementById("container");
+   setTimeout(function () {
+     con.remove();
+  }, 5000);
