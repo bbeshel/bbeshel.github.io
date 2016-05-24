@@ -4,7 +4,7 @@ This simply generates these elements and appends the individual
 text sections to them.	
 */
 $(document).ready(function(){
-	var heads = ["Prototype","YouTube Playlist Extension", "Java Maze Game",
+	var heads = ["Senior Design","Katamari","Lead God - an Enter the Gungeon item browser","HTML5 Paint Alpha","YouTube Playlist Extension for Chrome", "Java Maze Game",
 	"Java Checkers","Java ChemHandler"];
 	var ids = ["farm","yt","maze","checkers","chem"];
 	var div = $("<div>");
