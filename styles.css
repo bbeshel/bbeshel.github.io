@@ -112,6 +112,10 @@ a {
 text-decoration:none;
 }
 
+a:visited {
+color:#DA55B0;
+}
+
 code {
 font-size: 60%;
 margin: 5px 80px;
