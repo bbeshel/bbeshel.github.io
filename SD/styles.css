@@ -1,0 +1,25 @@
+#toolContainer {
+	background-color: #BADA55;
+	overflow: hidden;
+	padding: 5px;
+}
+
+#canvasContainer {
+	float: left;
+}
+
+#CHwrapper {
+	overflow: hidden;
+}
+
+#jsonToolbarDisplay {
+}
+
+.toolbarItem {
+	width: 90%;
+}
+
+.tpenCanvas {
+	float: left;
+	position: absolute;
+}

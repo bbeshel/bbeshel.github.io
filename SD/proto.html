@@ -10,6 +10,8 @@
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.js"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.js"></script>
         <script type="text/javascript" src="CanvasHandler.js"></script>
+        <script type="text/javascript" src="CanvasHandlerToolbar.js"></script>
+		<link rel="stylesheet" href="styles.css" style="text/css">
     <style>
         #canvasOverlay{
             display:block;
@@ -138,6 +140,10 @@
                 "otherContent":[]
             };
             
+			for (var n in linesInResourcesCanvas) {
+				linesInResourcesCanvas[n]
+			}
+			
         var linesInResourcesCanvas =
             {
                 "@id":"http://canvas.org/canvas/1",
