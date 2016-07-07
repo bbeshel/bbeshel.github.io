@@ -1,0 +1,25 @@
+.rowContainer {
+	position: relative;
+	margin: 5px;
+	background-color: #BBBBBB;
+}
+
+.rowItem {
+	display: inline-block;
+	width: 48%;
+	background-color: #CCCCCC;
+	margin: 5px;
+}
+
+p {
+	background-color: #BADA55;
+}
+
+.colorChange {
+	color: #aa0000;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
