@@ -9,6 +9,7 @@
         <meta charset="UTF-8">
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.js"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.js"></script>
+        <script type="text/javascript" src="JSONparser.js"></script>
         <script type="text/javascript" src="CanvasHandler.js"></script>
         <script type="text/javascript" src="CanvasHandlerToolbar.js"></script>
 		<link rel="stylesheet" href="styles.css" style="text/css">
@@ -60,7 +61,8 @@
             <textarea id="transcriptionText" placeholder="Enter a IIIF canvas"></textarea>
         </div>
         <button id="loadBtn" class="hideme" onclick="loadCanvas();"> Load Canvas </button> 
-        <button id="loadCanvasHandlerBtn" class="hideme" onclick="loadCanvasHandler();"> Load Test Canvas Handler</button> 
+        <button id="loadCanvasHandlerTestBtn" class="hideme" onclick="loadTestCanvasHandler();"> Load Test Canvas Handler</button> 
+        <button id="loadCanvasHandlerBtn" class="hideme" onclick="loadCanvasHandler();"> Load Parsed Canvas Handler</button> 
 		<p> {
                 "@id":"http://canvas.org/canvas/1",
                 "@type" : "sc:Canvas",
@@ -402,9 +404,14 @@
     };
 	
 	//***ADDED
-	function loadCanvasHandler() {
+	function loadTestCanvasHandler() {
 		
 		var chandler = new CanvasHandler();
 		chandler.init();
+	};
+	
+	function loadCanvasHandler() {
+		var chandler = new CanvasHandler();
+		chandler.init($("#transcriptionText").val());
 	};
 </script>

@@ -63,6 +63,17 @@ var CanvasHandlerToolbar = function (parentContext) {
 			changeCanvasMode(data);
 		});
 		
+		$(document).on("toolbar_updateAnnotationData", function () {
+			$jsonDisplay.val("");
+			var string = "";
+			var annos = chandlerParent.getCompletedPaths();
+			for (var i = 0; i < annos.length; i++) {
+				if (annos[i].JSON != null) {
+					string += JSON.stringify(annos[i].JSON);
+				}
+			}
+			$jsonDisplay.val(string);
+		});
 		// $buttonEdit.on("click", function () {
 			// changeCanvasMode("EDIT");
 		// });
