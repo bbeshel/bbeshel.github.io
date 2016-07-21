@@ -33,15 +33,13 @@
 		];
 		
 		var dummyAnnotation = {
-			"@id" : null,
 			"@type" : "oa:Annotation",
 			"motivation" : "sc:Painting",
 			"resource" : {
 				"@type" : "cnt:ContentAsText",
 				"cnt:chars" : ""
 			},
-			"on" : null,
-			"otherContent" : []
+			"on" : null
 		};
 		
 		var dummyPolyAnnotation = {
@@ -56,6 +54,29 @@
 			},
 			"on" : null
 		};
+		
+		var dummyCanvas = {
+      //This will be the anchor canvas in the anchor range
+          "@id" : "http://www.example.org/dummy/canvas/",
+          "@type" : "sc:Canvas",
+          "label" : "dummy canvas",
+          "height" : 1000,
+          "width" : 1000,
+          "images" : [{
+              "@type" : "oa:Annotation",
+              "motivation" : "sc:painting",
+              "resource" : {
+                "@id" : "http://lightonlens.com/wp-content/uploads/2013/07/raja_lol_gateway_arch1-2-2000x1125.jpg",
+                "@type" : "dctypes:Image",
+                "format" : "image/jpeg",
+                "height" : 2365,
+                "width" : 1579
+              },
+              "on" : "http://www.example.org/dummy/canvas/"
+          }],
+          "otherContent":[] // pretend its empty, you need to create the list for the first time, so start an array and put the annos in it.
+         };
+
 		
 		/*
 		The default configuration object.
@@ -77,7 +98,8 @@
 			canvasHeight : 0,
 			canvasImageSrc : null,
 			annotationList : null,
-			canvasData : null
+			canvasData : null,
+			canvasId : null
 		};
 		
 		var annoListData;
@@ -89,6 +111,12 @@
 			canvas : false,
 			complete : function () {
 				if (this.image && this.annos && this.canvas) {
+					return true;
+				}
+				return false;
+			},
+			fail : function () {
+				if (!this.image && !this.annos && !this.canvas) {
 					return true;
 				}
 				return false;
@@ -236,16 +264,49 @@
 				var anno;
 				switch (this.type) {
 					case "POLY":
+						if (this.JSON == null) {
+							anno = $.extend(true, {}, dummyPolyAnnotation);
+							anno["on"] = CONFIGS.canvasId;
+						} else {
+							anno = JSON.parse(this.JSON);
+						}
 						var SVGstring = createSVGTag(this);
-						anno = $.extend(true, {}, dummyPolyAnnotation);
 						anno["resource"]["selector"]["chars"] = SVGstring;
-						
+						console.log(SVGstring);
 						//TODO: get the link of this canvas for the on property
-						// anno["on"
 						
-						this.JSON = anno;
+						this.JSON = JSON.stringify(anno);
+						console.log(this.JSON);
+						
 						break;
 					case "RECT":
+						//TODO: probably have a check to see if this was edited
+						if (this.JSON == null) {
+							anno = $.extend(true, {}, dummyAnnotation);
+							var on = CONFIGS.canvasId;
+						} else {
+							anno = JSON.parse(this.JSON);
+							var on = anno["on"];
+							on = on.substring(0, on.search("#xywh="));
+						}
+						console.log(this.leftmost);
+						console.log(this.topmost);
+						console.log(this.rightmost);
+						console.log(this.bottommost);
+						//calculate xywh
+						//TODO: check if x[0] is actually the top-left point
+						on += "#xywh=" 
+						+ this.leftmost + "," 
+						+ this.topmost + "," 
+						+ (this.rightmost - this.leftmost) + "," 
+						+ (this.bottommost - this.topmost);
+						
+						anno["on"] = on;
+						
+						console.log(this.x);
+						console.log(this.y);
+						
+						this.JSON = JSON.stringify(anno);
 						break;
 					default:
 					
@@ -316,22 +377,56 @@
 				saveEditChanges();
 			});
 			
+			$(document).on("handler_exportAllDataJSON", function () {
+				//TODO: do not use this until we have checks for each annotation
+				/*currently only throws together the .JSON versions 
+				of each anchorList annotation in a list and adds them to the 
+				CONFIGS.canvasData, then sends the request to the server
+				*/
+				for (var i = 0; i < completedPaths.length; i++) {
+					console.log(completedPaths[i].JSON);
+					//TODO: check if valid JSON first
+					var j = JSON.parse(completedPaths[i].JSON);
+					CONFIGS.canvasData["otherContent"].push(j);
+				}
+				
+				var params = JSON.stringify(CONFIGS.canvasData);
+				
+				// CONFIGS.canvasData["otherContent"] = CONFIGS.annotationList;
+				var posturl = "http://165.134.241.141:80/annotationstore/anno/saveNewAnnotation.action?content=" + params;
+				
+				$.ajax({
+					url: posturl,
+					type: "POST",
+					dataType: "json",
+					crossDomain: true,
+				})
+				.done(function (data) {
+					console.log(data);
+				})
+				.fail(function (xhr, status, errorThrown) {
+					console.log(status);
+					console.log(errorThrown);
+				});
+				
+			});
+			
 			$(document).on("parser_annoDataRetrieved", function (e, data) {
 				console.log("FOUND ANNO DATA");
 				console.log(data);
 				CONFIGS.annotationList = jQuery.extend(true, {}, data);
-				convertAnnotations();
+				// convertAnnotations();
 				receivedDataCheck.annos = true;
-				onAllDataRetrieved();
+				// onAllDataRetrieved();
 			});
 			
 			$(document).on("parser_canvasDataRetrieved", function (e, data) {
 				console.log("FOUND CANVAS DATA");
 				console.log(data);
 				CONFIGS.canvasData = jQuery.extend(true, {}, data);
-				setCanvasDimensions();
+				// setCanvasDimensions();
 				receivedDataCheck.canvas = true;
-				onAllDataRetrieved();
+				// onAllDataRetrieved();
 			});
 			
 			$(document).on("parser_imageDataRetrieved", function (e, data) {
@@ -340,9 +435,13 @@
 				//TODO: set canvas size based on parsed info, unless missing
 				//TODO: add variable image tag for onload based on parsed content
 				// var img = $("<img src='http://norman.hrc.utexas.edu/graphics/mswaste/160 h612e 617/160_h612e_617_001.jpg' />");
-				CONFIGS.canvasImageSrc = data[0].src;
-				drawAndResizeImage();
+				CONFIGS.canvasImageSrc = data;
+				// drawAndResizeImage();
 				receivedDataCheck.image = true;
+				// onAllDataRetrieved();
+			});
+			
+			$(document).on("parser_allDataRetrieved", function () {
 				onAllDataRetrieved();
 			});
 			
@@ -353,6 +452,12 @@
 			//Changes the mode of operation on the canvas
 			$(document).on("toolbar_changeOperationMode", function () {
 				resetSharedParams();
+			});
+			
+			$(document).on("toolbar_annoItemClick", function (e, data) {
+				console.log(data);
+				$(document).trigger("handler_canvasIntClear");
+				drawPathIndicator(data);
 			});
 			
 			//Generic document mousemove catch and handler
@@ -402,28 +507,61 @@
 				console.log("data wasnt null");
 				parser.requestData(data);
 			} else {
-				CONFIGS.canvasImageSrc = 'http://norman.hrc.utexas.edu/graphics/mswaste/160 h612e 617/160_h612e_617_001.jpg';
-				var $canvImg = $("<img src='" + CONFIGS.canvasImageSrc + "'/>");
-				$canvImg.on("load", function () {
-					//TODO: make sure size of canvas conforms to standard
-					//TODO: make sure original data preserved corresponding to JSON canvas size
-					CONFIGS.canvasWidth = $canvImg.get(0).width;
-					CONFIGS.canvasHeight = $canvImg.get(0).height;
-					setCanvasDimensions();
-					console.log(CONFIGS.canvasWidth);
-					imgCx.drawImage($canvImg.get(0), 0, 0);
-				});
+				// CONFIGS.canvasImageSrc = 'http://norman.hrc.utexas.edu/graphics/mswaste/160 h612e 617/160_h612e_617_001.jpg';
+				// var $canvImg = $("<img src='" + CONFIGS.canvasImageSrc + "'/>");
+				// $canvImg.on("load", function () {
+					// //TODO: make sure size of canvas conforms to standard
+					// //TODO: make sure original data preserved corresponding to JSON canvas size
+					// CONFIGS.canvasWidth = $canvImg.get(0).width;
+					// CONFIGS.canvasHeight = $canvImg.get(0).height;
+					// setCanvasDimensions();
+					// console.log(CONFIGS.canvasWidth);
+					// imgCx.drawImage($canvImg.get(0), 0, 0);
+				// });
 			}
 			
 			
 			
 		};
 
+		//Callback for when the parser has finished
 		var onAllDataRetrieved = function () {
-			if (receivedDataCheck.complete) {
-				console.log("WE DID IT");
-				redrawCompletedPaths();
+			alert("dat retriev");
+			
+			
+			
+			if (receivedDataCheck.canvas) {
+				setCanvasDimensions();
+				CONFIGS.canvasId = parser.getCanvasId();
+			} else {
+				//TODO: setup fallback here instead
+				var dummyCan = $.extend(true, {}, dummyCanvas);
+				CONFIGS.canvasData = dummyCan;
+				CONFIGS.canvasId = CONFIGS.canvasData["@id"];
+				setCanvasDimensions();
 			}
+			
+			if (receivedDataCheck.image) {
+				drawAndResizeImage();
+			} else {
+				//TODO: fallback
+				CONFIGS.canvasImageSrc = CONFIGS.canvasData["images"][0]["resource"]["@id"];
+				drawAndResizeImage();
+			}
+			
+			if (receivedDataCheck.annos) {
+				convertAnnotations();
+			} 
+			
+			//TODO: revise
+			if (receivedDataCheck.complete()) {
+				console.log("WE DID IT");
+			} else if (receivedDataCheck.fail()) {
+				console.log("WE DUMMY NOW");
+				tool.setDummyState();
+			}
+			
+				redrawCompletedPaths();
 			// setCanvasDimensions();
 			// drawAndResizeImage();
 			// drawAllCanvasAnnotations();
@@ -431,6 +569,7 @@
 		
 	
 		var setCanvasDimensions = function () {
+			//Grab the canvas dimensions from the parsed data
 			if (CONFIGS.canvasData != null) {
 				console.log("canvas data found");
 				var wid = CONFIGS.canvasData.width;
@@ -438,14 +577,19 @@
 				CONFIGS.canvasWidth = wid;
 				CONFIGS.canvasHeight = hgt;
 			}
-
+			
+			//Canvas data exists with no dimensions
 			if (CONFIGS.canvasWidth !== 0) {
-				console.log("no canvas data found");
+				// alert("aw snap");
 				var wid = CONFIGS.canvasWidth;
 				var hgt = CONFIGS.canvasHeight;
 			} else {
-				console.log("returning");
-				return;
+				//fallback to default size
+				// alert("yo");
+				CONFIGS.canvasWidth = 1000;
+				CONFIGS.canvasHeight = 1000;				
+				var wid = CONFIGS.canvasWidth;
+				var hgt = CONFIGS.canvasHeight;
 			}
 				console.log(CONFIGS.canvasWidth);
 				console.log(CONFIGS.canvasHeight);
@@ -462,36 +606,49 @@
 			intCanvas.height = hgt;
 			$canvasContainer.width(wid);
 			$canvasContainer.height(hgt);
+			$("#toolContainer").height(hgt);
 		};
 		
 		var drawAndResizeImage = function () {
+			if (CONFIGS.canvasImageSrc == null) {
+				console.error("Warning: image source was null");
+				return;
+			}
 			var $canvImg = $("<img src='" + CONFIGS.canvasImageSrc + "'/>");
 			$canvImg.on("load", function () {
 				//TODO: make sure size of canvas conforms to standard
 				//TODO: make sure original data preserved corresponding to JSON canvas size
-				$canvImg.width = CONFIGS.canvasWidth;
-				$canvImg.height = CONFIGS.canvasHeight;
-				imgCx.drawImage($canvImg.get(0), 0, 0);
+				// $canvImg.get(0).width = CONFIGS.canvasWidth;
+				// $canvImg.get(0).height = CONFIGS.canvasHeight;
+				imgCx.drawImage($canvImg.get(0), 0, 0, CONFIGS.canvasWidth, CONFIGS.canvasHeight);
 				
+			})
+			.on("error", function () {
+				alert("Could not retrieve image data!");
 			});
 		};
 		
+		//Converts all annotations to the anchorList type
 		var convertAnnotations = function () {
-			if (CONFIGS.canvasWidth === 0 && CONFIGS.canvasHeight === 0) {
-				setTimeout(function () {
-					//TODO: remove this, we should always have canvas dimensions?
-					canvasDimensionsChecks++;
-					if (canvasDimensionsChecks === dimensionCheckLimit) {
-						CONFIGS.canvasWidth = 1000;
-						CONFIGS.canvasHeight = 1000;
-						setCanvasDimensions();
-					}
-					console.log("Warning: attempt to draw annotations failed. Reason: No canvas dimensions. Retrying...");
-					convertAnnotations();
-				}, 5000);
-			} else if (CONFIGS.annotationList == null) {
-				console.log("Warning: attempt to draw annotations failed. Reason: annotationList was null");
+			// if (CONFIGS.canvasWidth === 0 && CONFIGS.canvasHeight === 0) {
+				// setTimeout(function () {
+					// //TODO: remove this, we should always have canvas dimensions?
+					// canvasDimensionsChecks++;
+					// if (canvasDimensionsChecks === dimensionCheckLimit) {
+						// CONFIGS.canvasWidth = 1000;
+						// CONFIGS.canvasHeight = 1000;
+						// setCanvasDimensions();
+					// }
+					// console.log("Warning: attempt to draw annotations failed. Reason: No canvas dimensions. Retrying...");
+					// convertAnnotations();
+				// }, 5000);
+			// } else
+			if (CONFIGS.annotationList == null) {
+				alert("Warning: attempt to draw annotations failed. Reason: annotationList was null");
 			} else {
+				
+				
+				
 				var annos = CONFIGS.annotationList.resources;
 				var ind;
 				console.log(annos);
@@ -502,8 +659,10 @@
 					if (annos[i].hasOwnProperty("resource") && annos[i]["resource"].hasOwnProperty("selector")) {						
 						console.log("SVG");
 						if (annos[i]["resource"]["selector"].hasOwnProperty("chars")) {
-							var svgString = annos[i]["resource"]["selector"]["chars"];
-							drawSVGAnnotation(svgString);
+							// var svgString = annos[i]["resource"]["selector"]["chars"];
+							// drawSVGAnnotation(svgString);
+							var curAnno = annos[i];
+							SVGToAnchor(curAnno);
 							
 						}
 					} else if (annos[i].hasOwnProperty("on")) {
@@ -545,6 +704,32 @@
 				anchorList.clear();
 			} else {
 				console.error("Warning: annotation 'on' property found, but could not retrieve dimensions!");
+			}
+		};
+		
+		var SVGToAnchor = function (annotation) {
+			var chars = annotation["resource"]["selector"]["chars"];
+			var ind = chars.search("points");
+			if (ind > -1) {
+				var charSub = chars.substr(ind);
+				var indBegin = chars.search("\"");
+				charSub = charSub.substr((indBegin + 1));
+				var indEnd = charSub.search("\"");
+				var pointString = charSub.substring(0, indEnd);
+				var points = pointString.split(/[\s,]+/);
+				//TODO: make sure the split worked
+				anchorList.clear();
+				for (var i = 0; i < points.length; i++) {
+					points[i] = Number(points[i]);
+					anchorList.push(points[i], points[i+1]);
+					i++;
+				}
+				anchorList.type = "POLY";
+				anchorList.JSON = JSON.stringify(annotation);
+				var curList = jQuery.extend(true, {}, anchorList);
+				completedPaths.push(curList);
+				anchorList.clear();
+				
 			}
 		};
 		
@@ -604,6 +789,12 @@
 			
 		};
 		
+		var generateAllJSON = function () {
+			for (var i = 0; i < completedPaths.length; i++) {
+				completedPaths[i].generateJSON();
+			}
+		};
+		
 		//TODO: maybe convert the mouse coordinates to SC coordinates here?
 		//Gets the mouse coordinates on the canvas
 		this.getMousePos = function(evt) {
@@ -633,27 +824,7 @@
 		//TODO: rename this, or expand for each mode...
 		//Draws the mouse pointer indicator
 		var drawIndicator = function () {
-			var x, y;
 			
-			//Checks to see if we should force the indicator to a snap point
-			if (snapToClosePathBool && anchorList.length > 1) {
-				var anchor = { 
-					x : anchorList.x[0],
-					y : anchorList.y[0]
-				};
-				if (checkIfNearAnchor(mPos, anchor)) {
-					isInSnapZone = true;
-					x = anchorList.x[0];
-					y = anchorList.y[0];
-				}
-			}
-			
-			//Not near snap zone, so draw the indicator normally.
-			if (x == null && y == null) {
-				isInSnapZone = false;
-				x = mPos.x;
-				y = mPos.y;
-			}
 			
 			intCx.beginPath();
 			//TODO: make this permanent before calls 
@@ -661,19 +832,9 @@
 			intCx.strokeStyle = CONFIGS.feedback.strokeStyle;
 
 			//TODO: make the radius editable.
-			intCx.arc(x, y, 5, 0, 360);
+			intCx.arc(mPos.x, mPos.y, 5, 0, 360);
 			intCx.stroke();
-
-			//Draw the line from the previous anchor to mPos/snap point
-			if (anchorList.length > 0) {
-				intCx.beginPath();
-				intCx.moveTo(
-					anchorList.x[anchorList.length-1], 
-					anchorList.y[anchorList.length-1]
-				);
-				intCx.lineTo(x, y);
-				intCx.stroke();
-			}
+			
 		};
 		
 		//Draws the next line in the path being created
@@ -721,7 +882,9 @@
 				console.log(anchorList.type);
 				anchorList.generateJSON();
 				console.log(anchorList);
-				completedPaths.push(clone(anchorList));
+				// completedPaths.push(clone(anchorList));
+				var an = $.extend(true, {}, anchorList);
+				completedPaths.push(an)
 				createSVGTag(anchorList);
 				anchorList.clear();
 				console.log(completedPaths);
@@ -847,7 +1010,8 @@
 		//Checks if the user clicked inside a completed annotation during edit mode (selected a shaoe)
 		var checkIfInAnnoBounds = function (curPath, mPosCur, index) {
 			if (curPath.leftmost < mPosCur.x && mPosCur.x < curPath.rightmost && curPath.topmost < mPosCur.y && mPosCur.y < curPath.bottommost) {
-				selectedPaths.push( { path : clone(curPath), compIndex : index } );
+				var p = $.extend(true, {}, curPath);
+				selectedPaths.push( { path : p, compIndex : index } );
 				isInSelectedAnno = true;
 			};
 		};
@@ -867,10 +1031,18 @@
 		//Redraws the completed shape on the interaction canvas for editing
 		var drawSelectedPathIndicator = function () {
 			var selectedPath = selectedPaths[selectedPathsCurIndex].path;
+			drawPathIndicator(selectedPath);
+		};
+		
+		var drawPathIndicator = function (path) {
+			if (path == null) {
+				return;
+			}
+			intCx.strokeStyle = CONFIGS.feedback.strokeStyle;
 			intCx.beginPath();
-			intCx.moveTo(selectedPath.x[0], selectedPath.y[0]);
-			for (var i = 1; i < selectedPath.length; i++) {
-				intCx.lineTo(selectedPath.x[i], selectedPath.y[i]);
+			intCx.moveTo(path.x[0], path.y[0]);
+			for (var i = 1; i < path.length; i++) {
+				intCx.lineTo(path.x[i], path.y[i]);
 			}
 			intCx.stroke();
 		};
@@ -902,8 +1074,11 @@
 		var updateCompletedPaths = function () {
 			var curInd = 0;
 			for (var i = 0; i < selectedPaths.length; i++) {
+				console.log(selectedPaths[i].path);
 				curInd = selectedPaths[i].compIndex;
-				completedPaths[curInd] = clone(selectedPaths[i].path);
+				// completedPaths[curInd] = clone(selectedPaths[i].path);
+				var p = $.extend(true, {}, selectedPaths[i].path);
+				completedPaths[curInd] = p;
 			}
 		};
 		
@@ -958,6 +1133,7 @@
 			drawPath(selectedPath);
 			
 			updateCompletedPaths();
+			generateAllJSON();
 			$(document).trigger("toolbar_updateAnnotationData");
 			
 			selectedPathsCurIndex = 0;
@@ -1060,10 +1236,44 @@
 		//initialize modes to allow function expansion
 		tool.POLY = Object.create(null);
 		tool.EDIT = Object.create(null);
+		tool.RECT = Object.create(null);
 		
 		tool.POLY.mousemove = function (e) {
 			$(document).trigger("handler_canvasIntClear");
 			drawIndicator();
+			
+			var x, y;
+			//Checks to see if we should force the indicator to a snap point
+			if (snapToClosePathBool && anchorList.length > 1) {
+				var anchor = { 
+					x : anchorList.x[0],
+					y : anchorList.y[0]
+				};
+				if (checkIfNearAnchor(mPos, anchor)) {
+					isInSnapZone = true;
+					x = anchorList.x[0];
+					y = anchorList.y[0];
+				}
+			}
+			
+			//Not near snap zone, so draw the indicator normally.
+			if (x == null && y == null) {
+				isInSnapZone = false;
+				x = mPos.x;
+				y = mPos.y;
+			}
+			
+
+			//Draw the line from the previous anchor to mPos/snap point
+			if (anchorList.length > 0) {
+				intCx.beginPath();
+				intCx.moveTo(
+					anchorList.x[anchorList.length-1], 
+					anchorList.y[anchorList.length-1]
+				);
+				intCx.lineTo(x, y);
+				intCx.stroke();
+			}
 		};
 		
 		tool.POLY.click = function (e) {
@@ -1165,6 +1375,56 @@
 		
 		tool.EDIT.enter = function (e) {
 			saveEditChanges();
+		};
+		
+		tool.RECT.click = function () {
+			if (anchorList.length < 1) {
+				addAnchor();
+				console.log(mPos);
+			} else {
+				var mPosCur = mPos;
+				var x = anchorList.x[0];
+				var y = anchorList.y[0];
+				anchorList.push(mPosCur.x, y);
+				console.log(mPosCur.x);
+				console.log(y);
+				continuePath();
+				anchorList.push(mPosCur.x, mPosCur.y);
+				console.log(mPosCur.x);
+				console.log(mPosCur.y);
+				continuePath();
+				anchorList.push(x, mPosCur.y);
+				console.log(x);
+				console.log(mPosCur.y);
+				continuePath();
+				// anchorList.push(x, y);
+				endPath();
+				console.log(mPos);
+				
+				$(document).trigger("handler_canvasIntClear");
+				
+			}
+		};
+		
+		tool.RECT.mousemove = function () {
+			$(document).trigger("handler_canvasIntClear");
+			drawIndicator();
+			
+			var mPosCur = mPos;
+			
+			if (anchorList.length > 0) {
+				var x = anchorList.x[0];
+				var y = anchorList.y[0];
+				intCx.beginPath();
+				intCx.moveTo(x, y);
+				intCx.lineTo(mPosCur.x, y);
+				intCx.lineTo(mPosCur.x, mPosCur.y);
+				intCx.lineTo(x, mPosCur.y);
+				intCx.lineTo(x, y);
+				intCx.stroke();
+				
+			}
+			
 		};
 		
 	};

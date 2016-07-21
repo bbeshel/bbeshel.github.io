@@ -3,15 +3,6 @@
 		
 		var parent = context;
 		
-		// var $textField = $("#dataEntry");
-		// $textField.on("textSubmit", function () {
-			// evaluateData($textField.val());
-		// });
-		
-		// var $textButton = $("#dataButton");
-		// $textButton.on("click", function () {
-			// $textField.trigger("textSubmit");
-		// });
 		
 		var $curCont = $("<div>");
 		var $curImg = $("<div>");
@@ -25,10 +16,10 @@
 		var canvJSON;
 		var annoJSON;
 		var canvImg;
+		var canvId;
+		
+		var recurseIter = 0;
 
-		//Handles errors
-		// window.addEventListener('error',function(e){
-		// console.log(e)}, true);
 
 		//Handles the storage of information
 		var storageHandler = function(unstoredObject){
@@ -37,18 +28,21 @@
 		
 		//Checks objects from the canvas 
 		var basicCheck = function(canvasObject, $textOb){
+			recurseIter++;
+			
 			if (canvasObject["@type"] === "sc:Canvas") {
 				handleURL(canvasObject["@id"]);
+				canvId = canvasObject["@id"];
 			}
 			if (canvasObject["@type"] === "sc:AnnotationList") {
+				if (canvasObject.hasOwnProperty("on") && canvId == null) {
+					canvId = canvasObject["on"];
+				}
 				$textOb = $curAno;
-				//insideAnnoList = true;
 				handleURL(canvasObject["@id"]);
 				}
 				
 			if (canvasObject["@type"] === "dctypes:Image") {
-				//console.log(canvasObject);
-				//console.log(canvasObject["resource"]["@id"]);
 				
 				//here we are detecting for two different acceptable models for images
 				if (canvasObject.hasOwnProperty("resource")) {
@@ -57,40 +51,17 @@
 					handleURL(canvasObject["@id"]);
 				}
 			}
-			//console.log(canvasObject);
 			for (n in canvasObject){
-				//if (canvasObject.hasOwnProperty(n)){
-				// // debugger; -->
-				//console.log("in loop");
-				//console.log(n);
-				//console.log(canvasObject[n]);
+				
 				/* Slashed out curTextLine lines and textline lines will cause the  program to
 				 display all attributes of a canvas instead of just certain ones from annotations.*/
-					if (Array.isArray(canvasObject[n])){
-								//curTextLine += n + ":(Array)";
-								//textline(curTextLine, $textOb);
-							basicCheck(canvasObject[n], $textOb);
-							//curTextLine += "(/Array)";
-							// curTextLine +=("<br />");				 -->
-							//textline(curTextLine, $textOb, 1);					
-					} else if (typeof(canvasObject[n]) === 'object') {
-								//curTextLine += n + ":(Object, containing:)";
-								//textline(curTextLine, $textOb);
-							
-							basicCheck(canvasObject[n], $textOb);
-								//curTextLine += "(/Object)";
-								// curTextLine +=("<br />");				 -->
-								//textline(curTextLine, $textOb, 1);
-							
-					} else if (validChecker(canvasObject[n]) == true){
-						if ($textOb == $curAno){
-							switch(n){
-								case "@type":
-								/*if (canvasObject[n]=="sc:AnnotationList"){
-									curTextLine += "Annotation List";
-									curTextLine += ("<br />");
-									textline(curTextLine, $textOb);
-								}*/
+				if (Array.isArray(canvasObject[n]) || typeof(canvasObject[n]) === 'object'){
+						basicCheck(canvasObject[n], $textOb);				
+				} else if (validChecker(canvasObject[n]) === true){
+					if ($textOb == $curAno){
+						switch(n){
+							case "@type":
+						
 								if(canvasObject[n] == "oa:Annotation"){
 									curTextLine += "Annotation " + annoNumber.toString();
 									curTextLine += ("<br />");
@@ -123,18 +94,22 @@
 								textline(curTextLine, $textOb);
 								break;
 								*/
-								
-							}
-							// storageHandler(n); -->
-							//curTextLine += n + ": ";
-							//curTextLine += canvasObject[n];
-							//textline(curTextLine, $textOb);
-							// curTextLine +=("<br />"); -->
+							
 						}
-					} else {
-						//Item was blank
+						// storageHandler(n); -->
+						//curTextLine += n + ": ";
+						//curTextLine += canvasObject[n];
+						//textline(curTextLine, $textOb);
+						// curTextLine +=("<br />"); -->
 					}
-				//}
+				} else {
+					//Item was blank
+				}
+			//}
+			}
+			recurseIter--;
+			if (recurseIter === 0) {
+				$(document).trigger("parser_allDataRetrieved");
 			}
 		};
 		
@@ -164,27 +139,6 @@
 			}
 		};
 			
-		// var multipleObjectHelper = function(multiObject){
-			// switch(Array.isArray(multiObject)){
-				// case true:
-					// //Add the name of the array + "(Array)"
-					// for (var n=0; n<multiObject.length; n++){
-						// basicCheck(multiObject[n]);
-					// }
-					// //Add the name of the array, + "(/Array)"
-					// break;
-						
-			
-				// case false:
-					// //Add the name of the object, + "(Object, containing:)"
-					// basicCheck(multiObject);
-					// //Add the name of the object, + "(/Object)"
-					// break;
-			// }
-		// };
-		
-
-
 
 		//Parses the canvas in order to obtain necessary data for redrawing the canvas
 		//How information will be parsed depends on the type of canvas
@@ -193,6 +147,7 @@
 			var parsedCanv = JSON.parse(jsontext);
 			console.log(parsedCanv);
 			var type = parsedCanv["@type"];
+			//TODO: handle character case
 			if (type === "sc:AnnotationList") {
 				anoListURL = parsedCanv["@id"];
 				annoJSON = jQuery.extend(true, {}, parsedCanv);
@@ -213,7 +168,6 @@
 
 
 		var resolveCanvasURL = function (url) {
-			// clearArea();
 			var aThing = $.getJSON(url, function() {
 					alert("JSON data received.");
 				}
@@ -243,7 +197,6 @@
 		};
 		
 		
-		//	HTML STUFF====================================================
 		var handleURL = function (url) {
 			//test if url first (basic test)
 			var result = isURL(url);
@@ -272,20 +225,22 @@
 		};
 		
 		var resolveImage = function (imgUrl) {
-			var $img = $("<img src='" + imgUrl + "' />");
-			console.log("attempt to resolve image url");
-			$img.on("load", function () {
-				//TODO: display the image somewhere here!
-				console.log("attempt image append");
-				// $curImg.append(img);
-				canvImg = $img;
-				console.log (canvImg);
-				$(document).trigger("parser_imageDataRetrieved", [canvImg]);
+			canvImg = imgUrl;
+			$(document).trigger("parser_imageDataRetrieved", [canvImg]);
+			// var $img = $("<img src='" + imgUrl + "' />");
+			// console.log("attempt to resolve image url");
+			// $img.on("load", function () {
+				// //TODO: display the image somewhere here!
+				// console.log("attempt image append");
+				// // $curImg.append(img);
+				// canvImg = imgUrl;
+				// console.log (canvImg);
+				// $(document).trigger("parser_imageDataRetrieved", [canvImg]);
 				
-			})
-			.on("error", function () {
-				alert("Could not retrieve image data!");
-			});
+			// })
+			// .on("error", function () {
+				// alert("Could not retrieve image data!");
+			// });
 		};
 		
 		var resolveJSON = function (text, $box) {
@@ -331,6 +286,13 @@
 				return;
 			}
 			return canvImg;
+		};
+		
+		self.getCanvasId = function () {
+			if (canvId == null) {
+				return;
+			}
+			return canvId;
 		};
 		
 		self.requestData = function (data) {

@@ -408,6 +408,9 @@
 		
 		var chandler = new CanvasHandler();
 		chandler.init();
+		//trick the canvas into thinking we are done parsing
+		//used for dummy canvas testing purposes only
+		$(document).trigger("parser_allDataRetrieved");
 	};
 	
 	function loadCanvasHandler() {
