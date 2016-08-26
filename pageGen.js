@@ -6,7 +6,7 @@ text sections to them.
 $(document).ready(function(){
 	var heads = ["JavaScript, HTML5/CSS", "C/C++", "Assembly x86", "LEX/FLEX", 
 		"Haskell", "Java"];
-	var ids = ["cplus","x86","lex","hask","java"];
+	var ids = ["js", "cplus","x86","lex","hask","java"];
 	var div = $("<div>");
 	var container = $('<div class="container">');
 	var divhead = $('<div class="mini-header-div">');
